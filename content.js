@@ -65,11 +65,24 @@ function replaceTextWithinSameNode(range, originalText, convertedText, newRange)
  * @param {string} originalText 원본 텍스트
  * @param {string} convertedText 바꿀 텍스트
  * @param {Range} newRange 새로운 텍스트 선택 범위
- * @todo 같은 패턴이 반복되면 제일 앞의 텍스트만 변환되는 버그 존재
  */
 function replaceTextAcrossDifferentNodes(range, originalText, convertedText, newRange) {
     const parentNode = range.commonAncestorContainer;
-    const startOffset = parentNode.textContent.indexOf(originalText);
+    const walker = document.createTreeWalker(parentNode, NodeFilter.SHOW_TEXT, null, false);
+    let startOffset = 0;
+
+    while (walker.nextNode()) {
+        const node = walker.currentNode;
+
+        if (node.nodeName !== "text")
+            continue;
+
+        if (node === range.startContainer)
+            break;
+
+        startOffset += node.nodeValue.length;
+    }
+    startOffset += range.startOffset;
 
     replaceText(parentNode, startOffset, originalText, convertedText);
 
